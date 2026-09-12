@@ -14,7 +14,7 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options?: any }[]) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
@@ -29,15 +29,10 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes
   const isAuthPage = request.nextUrl.pathname.startsWith("/login");
   const isAdminPage = request.nextUrl.pathname.startsWith("/admin");
   const isProtected =
@@ -63,7 +58,6 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Admin routes protection
   if (user && isAdminPage) {
     const { data: profile } = await supabase
       .from("users")
